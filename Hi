@@ -8,7 +8,6 @@ local config = {
     fogEnd = math.huge,
     fogColor = Color3.new(0, 0, 0),
     timeOfDay = "00:00:00",
-    weather = Enum.Weather.Clear,
     preloadCameraOffset = Vector3.new(0, 0, 10)
 }
 
@@ -98,7 +97,6 @@ local function setSkyToNight()
     lighting.FogColor = config.fogColor
 
     lighting.TimeOfDay = config.timeOfDay
-    lighting.Weather = config.weather
 end
 
 local function continuouslySetSky()
