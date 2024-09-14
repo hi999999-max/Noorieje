@@ -1,0 +1,136 @@
+local config = {
+    skyboxAssetId = "rbxassetid://4951222008",
+    moonTextureId = "rbxassetid://555150581",
+    starTextureId = "rbxassetid://555150604",
+    brightness = 0.3,
+    ambientColor = Color3.fromRGB(20, 20, 20),
+    fogStart = math.huge,
+    fogEnd = math.huge,
+    fogColor = Color3.new(0, 0, 0),
+    timeOfDay = "00:00:00",
+    weather = Enum.Weather.Clear,
+    preloadCameraOffset = Vector3.new(0, 0, 10)
+}
+
+local function optimizeParts()
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Material = Enum.Material.SmoothPlastic
+            part.Reflectance = 0
+            part.CanCollide = true
+        end
+    end
+end
+
+local function optimizeMeshes()
+    for _, mesh in pairs(workspace:GetDescendants()) do
+        if mesh:IsA("MeshPart") then
+            mesh.Material = Enum.Material.SmoothPlastic
+            mesh.Reflectance = 0
+            mesh.CanCollide = true
+        end
+    end
+end
+
+local function removeDecals()
+    for _, decal in pairs(workspace:GetDescendants()) do
+        if decal:IsA("Decal") then
+            decal:Destroy()
+        end
+    end
+end
+
+local function hideTools()
+    local player = game.Players.LocalPlayer
+    if player and player.Backpack then
+        for _, tool in pairs(player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                tool.Handle.Transparency = 1
+                tool.Handle.CanCollide = false
+            end
+        end
+    end
+end
+
+local function monitorTools()
+    while true do
+        local player = game.Players.LocalPlayer
+        if player and player.Backpack then
+            local hasTools = false
+            for _, tool in pairs(player.Backpack:GetChildren()) do
+                if tool:IsA("Tool") then
+                    hasTools = true
+                    break
+                end
+            end
+            if hasTools then
+                hideTools()
+                break
+            end
+        end
+        wait(5)
+    end
+end
+
+local function setSkyToNight()
+    local lighting = game:GetService("Lighting")
+    
+    for _, child in pairs(lighting:GetChildren()) do
+        if child:IsA("Sky") then
+            child:Destroy()
+        end
+    end
+
+    local sky = Instance.new("Sky")
+    sky.Name = "NightSky"
+    sky.SkyboxId = config.skyboxAssetId
+    sky.MoonTextureId = config.moonTextureId
+    sky.StarTextureId = config.starTextureId
+    sky.Parent = lighting
+
+    lighting.Brightness = config.brightness
+    lighting.Ambient = config.ambientColor
+    lighting.OutdoorAmbient = config.ambientColor
+
+    lighting.GlobalShadows = false
+    lighting.FogEnd = config.fogEnd
+    lighting.FogStart = config.fogStart
+    lighting.FogColor = config.fogColor
+
+    lighting.TimeOfDay = config.timeOfDay
+    lighting.Weather = config.weather
+end
+
+local function continuouslySetSky()
+    while true do
+        setSkyToNight()
+        wait(10)
+    end
+end
+
+local function preloadAllParts()
+    local player = game.Players.LocalPlayer
+    local camera = workspace.CurrentCamera
+
+    camera.CameraSubject = player.Character.Humanoid
+    
+    for _, part in pairs(workspace:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("MeshPart") then
+            local originalPosition = camera.CFrame.Position
+            camera.CFrame = part.CFrame + config.preloadCameraOffset
+            wait(0.1)
+            camera.CFrame = CFrame.new(originalPosition)
+        end
+    end
+end
+
+local function optimizePerformance()
+    optimizeParts()
+    optimizeMeshes()
+    removeDecals()
+    monitorTools()
+    continuouslySetSky()
+    preloadAllParts()
+end
+
+optimizePerformance()
